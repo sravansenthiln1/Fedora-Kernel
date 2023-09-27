@@ -47,6 +47,6 @@ rpmbuild -bb --target aarch64-fedora-linux --with cross $SPEC_FILE
 # compiled packages in $HOME/RPMS/aarch64/
 # get release packages with $(ls | grep -v debug)
 echo "--- copying packages ---"
-cp $(ls $HOME/rpmbuild/RPMS/aarch64/ | grep -v debug) -r $HOME/rpmbuild/
+cp $(ls $HOME/rpmbuild/RPMS/aarch64/ | grep -v debug) -r $WDIR
 
 echo "done."
