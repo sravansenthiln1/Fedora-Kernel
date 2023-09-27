@@ -7,7 +7,7 @@
 [[ -z $FEDORA_REL ]] && FEDORA_REL="38"
 [[ -z $SPEC_FILE ]] && SPEC_FILE="kernel.spec"
 
-echo "Building $KERNEL_VERSION.fc$FEDORA_VERSION kernel packages"
+echo "Building $KERNEL_VERSION.fc$FEDORA_REL kernel packages"
 
 # build dependencies
 BUILD_DEPS="fedora-packager rpmdevtools bc binutils-aarch64-linux-gnu bison bpftool dwarves elfutils-devel\
@@ -18,7 +18,7 @@ WDIR=$(pwd)
 
 # Install dependency packages
 echo "--- Install build dependencies ---"
-sudo dnf install $BUILD_DEPS
+sudo dnf install -y $BUILD_DEPS
 
 # setup directories
 echo "--- setup rpmdev ---"
