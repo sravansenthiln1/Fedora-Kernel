@@ -1,0 +1,41 @@
+name: Fedora kernel packages build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag fedora-kernel
+      
+    - name: run the Docker image 
+      run: docker run --name my_container -d fedora-kernel
+
+    
+    - name: Docker Extract RPM packages
+    - uses: shrink/actions-docker-extract@v3.0.0
+    # You may pin to the exact commit or the version.
+    # uses: shrink/actions-docker-extract@a0eaa32fe671598e765702e505fc8446d9984b4e
+      with:
+        image: fedora-kernel
+        path: /root/rpmbuild/RPMS/aarch64/.
+        destination: ${{ github.workspace }}
+
+    - name: list packages
+      run: ls -r ${{ github.workspace }}
+
+    - name: Download packages
+      uses: actions/download-artifact@v2.1.1
+      with:
+        name: kernel_packages
+        path: ${{ github.workspace }}/*.rpm
