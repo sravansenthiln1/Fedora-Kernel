@@ -1,22 +1,22 @@
 diff --git a/drivers/clk/meson/clk-pll.c b/drivers/clk/meson/clk-pll.c
-index afefeba6e458..3b61478c8838 100644
+index 6fa7639a3..5d4d7dda0 100644
 --- a/drivers/clk/meson/clk-pll.c
 +++ b/drivers/clk/meson/clk-pll.c
 @@ -286,6 +286,8 @@ static int meson_clk_pll_wait_lock(struct clk_hw *hw)
  		udelay(20);
  	} while (--delay);
  
-+    pr_warn("%s: pll %s did not lock\n", __func__, clk_hw_get_name(hw));
++	pr_warn("%s: pll %s did not lock\n", __func__, clk_hw_get_name(hw));
 +
  	return -ETIMEDOUT;
  }
  
-@@ -397,9 +399,9 @@ static int meson_clk_pll_set_rate(struct clk_hw *hw, unsigned long rate,
+@@ -430,9 +432,9 @@ static int meson_clk_pll_set_rate(struct clk_hw *hw, unsigned long rate,
  		meson_parm_write(clk->map, &pll->frac, frac);
  	}
  
 -	/* If the pll is stopped, bail out now */
-+	/* If the pll is stopped, bail out now * /
++	/* If the pll is stopped, bail out now 
  	if (!enabled)
 -		return 0;
 +		return 0;*/
@@ -24,7 +24,7 @@ index afefeba6e458..3b61478c8838 100644
  	ret = meson_clk_pll_enable(hw);
  	if (ret) {
 diff --git a/drivers/clk/meson/g12a.c b/drivers/clk/meson/g12a.c
-index 310accf94830..a150fd5dfdc0 100644
+index 310accf94..4a2e83c29 100644
 --- a/drivers/clk/meson/g12a.c
 +++ b/drivers/clk/meson/g12a.c
 @@ -1603,7 +1603,7 @@ static struct clk_regmap g12b_cpub_clk_trace = {
@@ -91,7 +91,7 @@ index 310accf94830..a150fd5dfdc0 100644
  static struct clk_regmap g12a_cts_vdac = {
  	.data = &(struct clk_regmap_gate_data){
  		.offset = HHI_VID_CLK_CNTL2,
-@@ -4406,10 +4438,12 @@ static struct clk_hw_onecell_data g12a_hw_onecell_data = {
+@@ -4406,6 +4438,7 @@ static struct clk_hw_onecell_data g12a_hw_onecell_data = {
  		[CLKID_VCLK2_DIV12]		= &g12a_vclk2_div12.hw,
  		[CLKID_CTS_ENCI_SEL]		= &g12a_cts_enci_sel.hw,
  		[CLKID_CTS_ENCP_SEL]		= &g12a_cts_encp_sel.hw,
@@ -99,12 +99,7 @@ index 310accf94830..a150fd5dfdc0 100644
  		[CLKID_CTS_VDAC_SEL]		= &g12a_cts_vdac_sel.hw,
  		[CLKID_HDMI_TX_SEL]		= &g12a_hdmi_tx_sel.hw,
  		[CLKID_CTS_ENCI]		= &g12a_cts_enci.hw,
- 		[CLKID_CTS_ENCP]		= &g12a_cts_encp.hw,
-+		[CLKID_CTS_ENCL]		= &g12a_cts_encl.hw,
- 		[CLKID_CTS_VDAC]		= &g12a_cts_vdac.hw,
- 		[CLKID_HDMI_TX]			= &g12a_hdmi_tx.hw,
- 		[CLKID_HDMI_SEL]		= &g12a_hdmi_sel.hw,
-@@ -4635,10 +4669,12 @@ static struct clk_hw_onecell_data g12b_hw_onecell_data = {
+@@ -4635,6 +4668,7 @@ static struct clk_hw_onecell_data g12b_hw_onecell_data = {
  		[CLKID_VCLK2_DIV12]		= &g12a_vclk2_div12.hw,
  		[CLKID_CTS_ENCI_SEL]		= &g12a_cts_enci_sel.hw,
  		[CLKID_CTS_ENCP_SEL]		= &g12a_cts_encp_sel.hw,
@@ -112,12 +107,7 @@ index 310accf94830..a150fd5dfdc0 100644
  		[CLKID_CTS_VDAC_SEL]		= &g12a_cts_vdac_sel.hw,
  		[CLKID_HDMI_TX_SEL]		= &g12a_hdmi_tx_sel.hw,
  		[CLKID_CTS_ENCI]		= &g12a_cts_enci.hw,
- 		[CLKID_CTS_ENCP]		= &g12a_cts_encp.hw,
-+		[CLKID_CTS_ENCL]		= &g12a_cts_encl.hw,
- 		[CLKID_CTS_VDAC]		= &g12a_cts_vdac.hw,
- 		[CLKID_HDMI_TX]			= &g12a_hdmi_tx.hw,
- 		[CLKID_HDMI_SEL]		= &g12a_hdmi_sel.hw,
-@@ -4899,10 +4935,12 @@ static struct clk_hw_onecell_data sm1_hw_onecell_data = {
+@@ -4899,6 +4933,7 @@ static struct clk_hw_onecell_data sm1_hw_onecell_data = {
  		[CLKID_VCLK2_DIV12]		= &g12a_vclk2_div12.hw,
  		[CLKID_CTS_ENCI_SEL]		= &g12a_cts_enci_sel.hw,
  		[CLKID_CTS_ENCP_SEL]		= &g12a_cts_encp_sel.hw,
@@ -125,12 +115,7 @@ index 310accf94830..a150fd5dfdc0 100644
  		[CLKID_CTS_VDAC_SEL]		= &g12a_cts_vdac_sel.hw,
  		[CLKID_HDMI_TX_SEL]		= &g12a_hdmi_tx_sel.hw,
  		[CLKID_CTS_ENCI]		= &g12a_cts_enci.hw,
- 		[CLKID_CTS_ENCP]		= &g12a_cts_encp.hw,
-+		[CLKID_CTS_ENCL]		= &g12a_cts_encl.hw,
- 		[CLKID_CTS_VDAC]		= &g12a_cts_vdac.hw,
- 		[CLKID_HDMI_TX]			= &g12a_hdmi_tx.hw,
- 		[CLKID_HDMI_SEL]		= &g12a_hdmi_sel.hw,
-@@ -5133,10 +5171,12 @@ static struct clk_regmap *const g12a_clk_regmaps[] = {
+@@ -5133,10 +5168,12 @@ static struct clk_regmap *const g12a_clk_regmaps[] = {
  	&g12a_vclk2_div12_en,
  	&g12a_cts_enci_sel,
  	&g12a_cts_encp_sel,
@@ -144,7 +129,7 @@ index 310accf94830..a150fd5dfdc0 100644
  	&g12a_hdmi_tx,
  	&g12a_hdmi_sel,
 diff --git a/drivers/clk/meson/g12a.h b/drivers/clk/meson/g12a.h
-index a97613df38b3..8eb51134456a 100644
+index a97613df3..8eb511344 100644
 --- a/drivers/clk/meson/g12a.h
 +++ b/drivers/clk/meson/g12a.h
 @@ -265,8 +265,9 @@
@@ -159,7 +144,7 @@ index a97613df38b3..8eb51134456a 100644
  /* include the CLKIDs that have been made part of the DT binding */
  #include <dt-bindings/clock/g12a-clkc.h>
 diff --git a/drivers/clk/meson/vid-pll-div.c b/drivers/clk/meson/vid-pll-div.c
-index daff235bc763..1cec988432b6 100644
+index daff235bc..1cec98843 100644
 --- a/drivers/clk/meson/vid-pll-div.c
 +++ b/drivers/clk/meson/vid-pll-div.c
 @@ -39,12 +39,14 @@ struct vid_pll_div {
@@ -178,7 +163,7 @@ index daff235bc763..1cec988432b6 100644
  	VID_PLL_DIV(0x0e38, 0, 6, 1),	/* 6/1  => /6 */
  	VID_PLL_DIV(0x0000, 3, 25, 4),	/* 25/4 => /6.25 */
 diff --git a/include/dt-bindings/clock/g12a-clkc.h b/include/dt-bindings/clock/g12a-clkc.h
-index a93b58c5e18e..af2c3c08ac33 100644
+index a93b58c5e..af2c3c08a 100644
 --- a/include/dt-bindings/clock/g12a-clkc.h
 +++ b/include/dt-bindings/clock/g12a-clkc.h
 @@ -149,5 +149,6 @@

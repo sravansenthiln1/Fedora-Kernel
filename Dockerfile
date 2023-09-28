@@ -6,10 +6,9 @@ COPY kernel.spec /root/kernel.spec
 COPY kernel-local /root/kernel-local
 
 # patch files copy
-COPY patches/001-ts050_device_tree.patch /root/patches/001-ts050_device_tree.patch
-COPY patches/002-meson_clk.patch /root/patches/002-meson_clk.patch
-COPY patches/003-dw-mipi-dsi.c.patch /root/patches/003-dw-mipi-dsi.c.patch
-COPY patches/004-drm_meson_patches.patch /root/patches/004-drm_meson_patches.patch
+COPY patches/kvim3-ts050-dts-enable.patch /root/patches/kvim3-ts050-dts-enable.patch
+COPY patches/meson-clk-mipi.patch /root/patches/meson-clk-mipi.patch
+COPY patches/meson-drm-clk.patch /root/patches/meson-drm-clk.patch
 
 # essential packages
 RUN dnf install -y dnf-plugins-core git-core openssh-server \

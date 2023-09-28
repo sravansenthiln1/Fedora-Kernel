@@ -1,22 +1,18 @@
-diff --git a/drivers/gpu/drm/meson/meson_drv.c b/drivers/gpu/drm/meson/meson_drv.c
-index 79bfe3938d3c..54fef0639c03 100644
---- a/drivers/gpu/drm/meson/meson_drv.c
-+++ b/drivers/gpu/drm/meson/meson_drv.c
-@@ -326,6 +327,12 @@ static int meson_drv_bind_master(struct device *dev, bool has_components)
- 	ret = meson_encoder_hdmi_init(priv);
- 	if (ret)
- 		goto exit_afbcd;
-+	
-+	if (meson_vpu_is_compatible(priv, VPU_COMPATIBLE_G12A)) {
-+		ret = meson_encoder_dsi_init(priv);
-+		if (ret)
-+			goto free_drm;
-+	}
+diff --git a/drivers/gpu/drm/bridge/synopsys/dw-mipi-dsi.c b/drivers/gpu/drm/bridge/synopsys/dw-mipi-dsi.c
+index 4291798bd..bb3d4fb67 100644
+--- a/drivers/gpu/drm/bridge/synopsys/dw-mipi-dsi.c
++++ b/drivers/gpu/drm/bridge/synopsys/dw-mipi-dsi.c
+@@ -1015,7 +1015,7 @@ static const struct drm_bridge_funcs dw_mipi_dsi_bridge_funcs = {
+ 	.attach			= dw_mipi_dsi_bridge_attach,
+ };
  
- 	ret = meson_plane_create(priv);
- 	if (ret)
+-#ifdef CONFIG_DEBUG_FS
++#if 0 //def CONFIG_DEBUG_FS
+ 
+ static int dw_mipi_dsi_debugfs_write(void *data, u64 val)
+ {
 diff --git a/drivers/gpu/drm/meson/meson_vclk.c b/drivers/gpu/drm/meson/meson_vclk.c
-index 3fc7d9cb9953..00184622bdca 100644
+index 2a82119eb..a5f78aae0 100644
 --- a/drivers/gpu/drm/meson/meson_vclk.c
 +++ b/drivers/gpu/drm/meson/meson_vclk.c
 @@ -55,6 +55,8 @@
@@ -84,18 +80,19 @@ index 3fc7d9cb9953..00184622bdca 100644
  void meson_vclk_setup(struct meson_drm *priv, unsigned int target,
  		      unsigned int phy_freq, unsigned int vclk_freq,
  		      unsigned int venc_freq, unsigned int dac_freq,
-@@ -1050,6 +1094,9 @@ void meson_vclk_setup(struct meson_drm *priv, unsigned int target,
+@@ -1050,7 +1094,9 @@ void meson_vclk_setup(struct meson_drm *priv, unsigned int target,
  		meson_vclk_set(priv, phy_freq, 0, 0, 0,
  			       VID_PLL_DIV_5, 2, 1, 1, false, false);
  		return;
+-	}
 +	} else if (target == MESON_VCLK_TARGET_DSI) {
 +		meson_dsi_clock_config(priv, phy_freq);
 +		return;
- 	}
  
  	hdmi_tx_div = vclk_freq / dac_freq;
+ 
 diff --git a/drivers/gpu/drm/meson/meson_vclk.h b/drivers/gpu/drm/meson/meson_vclk.h
-index 60617aaf18dd..1152b3af8d2e 100644
+index 60617aaf1..1152b3af8 100644
 --- a/drivers/gpu/drm/meson/meson_vclk.h
 +++ b/drivers/gpu/drm/meson/meson_vclk.h
 @@ -17,6 +17,7 @@ enum {
