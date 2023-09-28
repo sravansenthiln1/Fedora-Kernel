@@ -1,0 +1,190 @@
+diff --git a/drivers/clk/meson/clk-pll.c b/drivers/clk/meson/clk-pll.c
+index afefeba6e458..3b61478c8838 100644
+--- a/drivers/clk/meson/clk-pll.c
++++ b/drivers/clk/meson/clk-pll.c
+@@ -286,6 +286,8 @@ static int meson_clk_pll_wait_lock(struct clk_hw *hw)
+ 		udelay(20);
+ 	} while (--delay);
+ 
++    pr_warn("%s: pll %s did not lock\n", __func__, clk_hw_get_name(hw));
++
+ 	return -ETIMEDOUT;
+ }
+ 
+@@ -397,9 +399,9 @@ static int meson_clk_pll_set_rate(struct clk_hw *hw, unsigned long rate,
+ 		meson_parm_write(clk->map, &pll->frac, frac);
+ 	}
+ 
+-	/* If the pll is stopped, bail out now */
++	/* If the pll is stopped, bail out now * /
+ 	if (!enabled)
+-		return 0;
++		return 0;*/
+ 
+ 	ret = meson_clk_pll_enable(hw);
+ 	if (ret) {
+diff --git a/drivers/clk/meson/g12a.c b/drivers/clk/meson/g12a.c
+index 310accf94830..a150fd5dfdc0 100644
+--- a/drivers/clk/meson/g12a.c
++++ b/drivers/clk/meson/g12a.c
+@@ -1603,7 +1603,7 @@ static struct clk_regmap g12b_cpub_clk_trace = {
+ };
+ 
+ static const struct pll_mult_range g12a_gp0_pll_mult_range = {
+-	.min = 125,
++	.min = 120,
+ 	.max = 255,
+ };
+ 
+@@ -1616,7 +1616,7 @@ static const struct reg_sequence g12a_gp0_init_regs[] = {
+ 	{ .reg = HHI_GP0_PLL_CNTL3,	.def = 0x48681c00 },
+ 	{ .reg = HHI_GP0_PLL_CNTL4,	.def = 0x33771290 },
+ 	{ .reg = HHI_GP0_PLL_CNTL5,	.def = 0x39272000 },
+-	{ .reg = HHI_GP0_PLL_CNTL6,	.def = 0x56540000 },
++	{ .reg = HHI_GP0_PLL_CNTL6,	.def = 0x56540000, .delay_us = 10 },
+ };
+ 
+ static struct clk_regmap g12a_gp0_pll_dco = {
+@@ -3547,6 +3547,22 @@ static struct clk_regmap g12a_cts_encp_sel = {
+ 	},
+ };
+ 
++static struct clk_regmap g12a_cts_encl_sel = {
++	.data = &(struct clk_regmap_mux_data){
++		.offset = HHI_VIID_CLK_DIV,
++		.mask = 0xf,
++		.shift = 12,
++		.table = mux_table_cts_sel,
++	},
++	.hw.init = &(struct clk_init_data){
++		.name = "cts_encl_sel",
++		.ops = &clk_regmap_mux_ops,
++		.parent_hws = g12a_cts_parent_hws,
++		.num_parents = ARRAY_SIZE(g12a_cts_parent_hws),
++		.flags = CLK_SET_RATE_NO_REPARENT | CLK_GET_RATE_NOCACHE,
++	},
++};
++
+ static struct clk_regmap g12a_cts_vdac_sel = {
+ 	.data = &(struct clk_regmap_mux_data){
+ 		.offset = HHI_VIID_CLK_DIV,
+@@ -3626,6 +3642,22 @@ static struct clk_regmap g12a_cts_encp = {
+ 	},
+ };
+ 
++static struct clk_regmap g12a_cts_encl = {
++	.data = &(struct clk_regmap_gate_data){
++		.offset = HHI_VID_CLK_CNTL2,
++		.bit_idx = 3,
++	},
++	.hw.init = &(struct clk_init_data) {
++		.name = "cts_encl",
++		.ops = &clk_regmap_gate_ops,
++		.parent_hws = (const struct clk_hw *[]) {
++			&g12a_cts_encl_sel.hw
++		},
++		.num_parents = 1,
++		.flags = CLK_SET_RATE_PARENT | CLK_IGNORE_UNUSED,
++	},
++};
++
+ static struct clk_regmap g12a_cts_vdac = {
+ 	.data = &(struct clk_regmap_gate_data){
+ 		.offset = HHI_VID_CLK_CNTL2,
+@@ -4406,10 +4438,12 @@ static struct clk_hw_onecell_data g12a_hw_onecell_data = {
+ 		[CLKID_VCLK2_DIV12]		= &g12a_vclk2_div12.hw,
+ 		[CLKID_CTS_ENCI_SEL]		= &g12a_cts_enci_sel.hw,
+ 		[CLKID_CTS_ENCP_SEL]		= &g12a_cts_encp_sel.hw,
++		[CLKID_CTS_ENCL_SEL]		= &g12a_cts_encl_sel.hw,
+ 		[CLKID_CTS_VDAC_SEL]		= &g12a_cts_vdac_sel.hw,
+ 		[CLKID_HDMI_TX_SEL]		= &g12a_hdmi_tx_sel.hw,
+ 		[CLKID_CTS_ENCI]		= &g12a_cts_enci.hw,
+ 		[CLKID_CTS_ENCP]		= &g12a_cts_encp.hw,
++		[CLKID_CTS_ENCL]		= &g12a_cts_encl.hw,
+ 		[CLKID_CTS_VDAC]		= &g12a_cts_vdac.hw,
+ 		[CLKID_HDMI_TX]			= &g12a_hdmi_tx.hw,
+ 		[CLKID_HDMI_SEL]		= &g12a_hdmi_sel.hw,
+@@ -4635,10 +4669,12 @@ static struct clk_hw_onecell_data g12b_hw_onecell_data = {
+ 		[CLKID_VCLK2_DIV12]		= &g12a_vclk2_div12.hw,
+ 		[CLKID_CTS_ENCI_SEL]		= &g12a_cts_enci_sel.hw,
+ 		[CLKID_CTS_ENCP_SEL]		= &g12a_cts_encp_sel.hw,
++		[CLKID_CTS_ENCL_SEL]		= &g12a_cts_encl_sel.hw,
+ 		[CLKID_CTS_VDAC_SEL]		= &g12a_cts_vdac_sel.hw,
+ 		[CLKID_HDMI_TX_SEL]		= &g12a_hdmi_tx_sel.hw,
+ 		[CLKID_CTS_ENCI]		= &g12a_cts_enci.hw,
+ 		[CLKID_CTS_ENCP]		= &g12a_cts_encp.hw,
++		[CLKID_CTS_ENCL]		= &g12a_cts_encl.hw,
+ 		[CLKID_CTS_VDAC]		= &g12a_cts_vdac.hw,
+ 		[CLKID_HDMI_TX]			= &g12a_hdmi_tx.hw,
+ 		[CLKID_HDMI_SEL]		= &g12a_hdmi_sel.hw,
+@@ -4899,10 +4935,12 @@ static struct clk_hw_onecell_data sm1_hw_onecell_data = {
+ 		[CLKID_VCLK2_DIV12]		= &g12a_vclk2_div12.hw,
+ 		[CLKID_CTS_ENCI_SEL]		= &g12a_cts_enci_sel.hw,
+ 		[CLKID_CTS_ENCP_SEL]		= &g12a_cts_encp_sel.hw,
++		[CLKID_CTS_ENCL_SEL]		= &g12a_cts_encl_sel.hw,
+ 		[CLKID_CTS_VDAC_SEL]		= &g12a_cts_vdac_sel.hw,
+ 		[CLKID_HDMI_TX_SEL]		= &g12a_hdmi_tx_sel.hw,
+ 		[CLKID_CTS_ENCI]		= &g12a_cts_enci.hw,
+ 		[CLKID_CTS_ENCP]		= &g12a_cts_encp.hw,
++		[CLKID_CTS_ENCL]		= &g12a_cts_encl.hw,
+ 		[CLKID_CTS_VDAC]		= &g12a_cts_vdac.hw,
+ 		[CLKID_HDMI_TX]			= &g12a_hdmi_tx.hw,
+ 		[CLKID_HDMI_SEL]		= &g12a_hdmi_sel.hw,
+@@ -5133,10 +5171,12 @@ static struct clk_regmap *const g12a_clk_regmaps[] = {
+ 	&g12a_vclk2_div12_en,
+ 	&g12a_cts_enci_sel,
+ 	&g12a_cts_encp_sel,
++	&g12a_cts_encl_sel,
+ 	&g12a_cts_vdac_sel,
+ 	&g12a_hdmi_tx_sel,
+ 	&g12a_cts_enci,
+ 	&g12a_cts_encp,
++	&g12a_cts_encl,
+ 	&g12a_cts_vdac,
+ 	&g12a_hdmi_tx,
+ 	&g12a_hdmi_sel,
+diff --git a/drivers/clk/meson/g12a.h b/drivers/clk/meson/g12a.h
+index a97613df38b3..8eb51134456a 100644
+--- a/drivers/clk/meson/g12a.h
++++ b/drivers/clk/meson/g12a.h
+@@ -265,8 +265,9 @@
+ #define CLKID_NNA_CORE_CLK_SEL			265
+ #define CLKID_NNA_CORE_CLK_DIV			266
+ #define CLKID_MIPI_DSI_PXCLK_DIV		268
++#define CLKID_CTS_ENCL_SEL			272
+ 
+-#define NR_CLKS					271
++#define NR_CLKS					273
+ 
+ /* include the CLKIDs that have been made part of the DT binding */
+ #include <dt-bindings/clock/g12a-clkc.h>
+diff --git a/drivers/clk/meson/vid-pll-div.c b/drivers/clk/meson/vid-pll-div.c
+index daff235bc763..1cec988432b6 100644
+--- a/drivers/clk/meson/vid-pll-div.c
++++ b/drivers/clk/meson/vid-pll-div.c
+@@ -39,12 +39,14 @@ struct vid_pll_div {
+ 	}
+ 
+ static const struct vid_pll_div vid_pll_div_table[] = {
++	VID_PLL_DIV(0xffff, 0, 1, 1),	/* 1/1  => /1 */
+ 	VID_PLL_DIV(0x0aaa, 0, 2, 1),	/* 2/1  => /2 */
+ 	VID_PLL_DIV(0x5294, 2, 5, 2),	/* 5/2  => /2.5 */
+ 	VID_PLL_DIV(0x0db6, 0, 3, 1),	/* 3/1  => /3 */
+ 	VID_PLL_DIV(0x36cc, 1, 7, 2),	/* 7/2  => /3.5 */
+ 	VID_PLL_DIV(0x6666, 2, 15, 4),	/* 15/4 => /3.75 */
+ 	VID_PLL_DIV(0x0ccc, 0, 4, 1),	/* 4/1  => /4 */
++	VID_PLL_DIV(0x0ccc, 1, 467, 100), /* 467/100  => /4.67 */
+ 	VID_PLL_DIV(0x739c, 2, 5, 1),	/* 5/1  => /5 */
+ 	VID_PLL_DIV(0x0e38, 0, 6, 1),	/* 6/1  => /6 */
+ 	VID_PLL_DIV(0x0000, 3, 25, 4),	/* 25/4 => /6.25 */
+diff --git a/include/dt-bindings/clock/g12a-clkc.h b/include/dt-bindings/clock/g12a-clkc.h
+index a93b58c5e18e..af2c3c08ac33 100644
+--- a/include/dt-bindings/clock/g12a-clkc.h
++++ b/include/dt-bindings/clock/g12a-clkc.h
+@@ -149,5 +149,6 @@
+ #define CLKID_NNA_CORE_CLK			267
+ #define CLKID_MIPI_DSI_PXCLK_SEL		269
+ #define CLKID_MIPI_DSI_PXCLK			270
++#define CLKID_CTS_ENCL				271
+ 
+ #endif /* __G12A_CLKC_H */

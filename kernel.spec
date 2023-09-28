@@ -981,6 +981,11 @@ Source4002: gating.yaml
 Patch1: patch-%{patchversion}-redhat.patch
 %endif
 
+Patch2: 001-ts050_device_tree.patch
+Patch3: 002-meson_clk.patch
+Patch4: 003-dw-mipi-dsi.c.patch
+Patch5: 004-drm_meson_patches.patch
+
 # empty final patch to facilitate testing of kernel patches
 Patch999999: linux-kernel-test.patch
 
@@ -1733,6 +1738,11 @@ cp -a %{SOURCE1} .
 
 ApplyOptionalPatch patch-%{patchversion}-redhat.patch
 %endif
+
+ApplyPatch 001-ts050_device_tree.patch
+ApplyPatch 002-meson_clk.patch
+ApplyPatch 003-dw-mipi-dsi.c.patch
+ApplyPatch 004-drm_meson_patches.patch
 
 ApplyOptionalPatch linux-kernel-test.patch
 

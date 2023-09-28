@@ -1,0 +1,223 @@
+diff --git a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi
+index 52c7565613ef..757617dc222a 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi
++++ b/arch/arm64/boot/dts/amlogic/meson-g12-common.dtsi
+@@ -1657,9 +1657,28 @@ pwrc: power-controller {
+ 								       <250000000>,
+ 								       <0>; /* Do Nothing */
+ 					};
++
++					mipi_analog_dphy: phy {
++						compatible = "amlogic,g12a-mipi-dphy-analog";
++						#phy-cells = <0>;
++						status = "disabled";
++					};
+ 				};
+ 			};
+ 
++			mipi_dphy: phy@44000 {
++				compatible = "amlogic,axg-mipi-dphy";
++				reg = <0x0 0x44000 0x0 0x2000>;
++				clocks = <&clkc CLKID_MIPI_DSI_PHY>;
++				clock-names = "pclk";
++				resets = <&reset RESET_MIPI_DSI_PHY>;
++				reset-names = "phy";
++				phys = <&mipi_analog_dphy>;
++				phy-names = "analog";
++				#phy-cells = <0>;
++				status = "disabled";
++			};
++
+ 			usb3_pcie_phy: phy@46000 {
+ 				compatible = "amlogic,g12a-usb3-pcie-phy";
+ 				reg = <0x0 0x46000 0x0 0x2000>;
+@@ -2150,6 +2169,15 @@ hdmi_tx_out: endpoint {
+ 					remote-endpoint = <&hdmi_tx_in>;
+ 				};
+ 			};
++
++			/* DPI output port */
++			dpi_port: port@2 {
++				reg = <2>;
++
++				dpi_out: endpoint {
++					remote-endpoint = <&mipi_dsi_in>;
++				};
++			};
+ 		};
+ 
+ 		gic: interrupt-controller@ffc01000 {
+@@ -2187,6 +2215,43 @@ gpio_intc: interrupt-controller@f080 {
+ 				amlogic,channel-interrupts = <64 65 66 67 68 69 70 71>;
+ 			};
+ 
++			mipi_dsi: mipi-dsi@7000 {
++				compatible = "amlogic,meson-g12a-dw-mipi-dsi";
++				reg = <0x0 0x7000 0x0 0x1000>;
++				resets = <&reset RESET_MIPI_DSI_HOST>;
++				reset-names = "top";
++				clocks = <&clkc CLKID_MIPI_DSI_HOST>,
++					 <&clkc CLKID_MIPI_DSI_PXCLK>;
++				clock-names = "pclk", "px_clk";
++				phys = <&mipi_dphy>;
++				phy-names = "dphy";
++				#address-cells = <1>;
++				#size-cells = <0>;
++				status = "disabled";
++
++				assigned-clocks = <&clkc CLKID_MIPI_DSI_PXCLK_SEL>;
++				assigned-clock-parents = <&clkc CLKID_GP0_PLL>;
++
++				ports {
++					#address-cells = <1>;
++					#size-cells = <0>;
++
++					/* VPU VENC Input */
++					mipi_dsi_venc_port: port@0 {
++						reg = <0>;
++
++						mipi_dsi_in: endpoint {
++							remote-endpoint = <&dpi_out>;
++						};
++					};
++
++					/* DSI Output */
++					mipi_dsi_panel_port: port@1 {
++						reg = <1>;
++					};
++				};
++			};
++
+ 			watchdog: watchdog@f0d0 {
+ 				compatible = "amlogic,meson-gxbb-wdt";
+ 				reg = <0x0 0xf0d0 0x0 0x10>;
+diff --git a/arch/arm64/boot/dts/amlogic/meson-g12b-khadas-vim3.dtsi b/arch/arm64/boot/dts/amlogic/meson-g12b-khadas-vim3.dtsi
+index 16dd409051b4..81c3057143b4 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-g12b-khadas-vim3.dtsi
++++ b/arch/arm64/boot/dts/amlogic/meson-g12b-khadas-vim3.dtsi
+@@ -98,7 +98,7 @@ &pwm_ab {
+ };
+ 
+ &pwm_AO_cd {
+-	pinctrl-0 = <&pwm_ao_d_e_pins>;
++	pinctrl-0 = <&pwm_ao_c_6_pins>, <&pwm_ao_d_e_pins>;
+ 	pinctrl-names = "default";
+ 	clocks = <&xtal>;
+ 	clock-names = "clkin1";
+diff --git a/arch/arm64/boot/dts/amlogic/meson-khadas-vim3.dtsi b/arch/arm64/boot/dts/amlogic/meson-khadas-vim3.dtsi
+index 18e82d7498ce..0672b3c36136 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-khadas-vim3.dtsi
++++ b/arch/arm64/boot/dts/amlogic/meson-khadas-vim3.dtsi
+@@ -64,6 +64,14 @@ gpiomem_ao {
+ 		status = "okay";
+ 	};
+ 
++	panel_backlight: backlight {
++		compatible = "pwm-backlight";
++		pwms = <&pwm_AO_cd 0 25000 0>;
++		brightness-levels = <0 255>;
++		num-interpolated-steps = <255>;
++		default-brightness-level = <200>;
++	};
++
+ 	leds {
+ 		compatible = "gpio-leds";
+ 
+@@ -371,7 +379,7 @@ &frddr_c {
+ };
+ 
+ &hdmi_tx {
+-	status = "okay";
++	status = "disabled";
+ 	pinctrl-0 = <&hdmitx_hpd_pins>, <&hdmitx_ddc_pins>;
+ 	pinctrl-names = "default";
+ 	hdmi-supply = <&vcc_5v>;
+@@ -409,6 +417,23 @@ rtc: rtc@51 {
+ 	};
+ };
+ 
++&i2c3 {
++	status = "okay";
++	pinctrl-0 = <&i2c3_sda_a_pins>, <&i2c3_sck_a_pins>;
++	pinctrl-names = "default";
++
++	touch-controller@38 {
++		compatible = "edt,edt-ft5206";
++		reg = <0x38>;
++		interrupt-parent = <&gpio_intc>;
++		interrupts = <66 IRQ_TYPE_EDGE_FALLING>; /* GPIOA_5 */
++		reset-gpio = <&gpio_expander 6 GPIO_ACTIVE_LOW>;
++		touchscreen-size-x = <1080>;
++		touchscreen-size-y = <1920>;
++		status = "okay";
++	};
++};
++
+ &ir {
+ 	status = "okay";
+ 	pinctrl-0 = <&remote_input_ao_pins>;
+@@ -416,6 +441,51 @@ &ir {
+ 	linux,rc-map-name = "rc-khadas";
+ };
+ 
++&mipi_dsi {
++	status = "okay";
++
++	assigned-clocks = <&clkc CLKID_GP0_PLL>,
++			  <&clkc CLKID_MIPI_DSI_PXCLK_SEL>,
++			  <&clkc CLKID_MIPI_DSI_PXCLK>;
++	assigned-clock-parents = <0>, 
++				 <&clkc CLKID_GP0_PLL>,
++				 <0>;
++	assigned-clock-rates = <960000000>,
++			       <0>,
++			       <960000000>;
++
++	panel@0 {
++		compatible = "khadas,ts050";
++		reset-gpios = <&gpio_expander 0 GPIO_ACTIVE_LOW>;
++		enable-gpios = <&gpio_expander 1 GPIO_ACTIVE_HIGH>;
++		power-supply = <&vcc_3v3>;
++		backlight = <&panel_backlight>;
++		width-mm = <64>;
++		height-mm = <118>;
++		reg = <0>;
++
++		port {
++			mipi_in_panel: endpoint {
++				remote-endpoint = <&mipi_out_panel>;
++			};
++		};
++	};
++};
++
++&mipi_analog_dphy {
++	status = "okay";
++};
++
++&mipi_dphy {
++	status = "okay";
++};
++
++&mipi_dsi_panel_port {
++	mipi_out_panel: endpoint {
++		remote-endpoint = <&mipi_in_panel>;
++	};
++};
++
+ &pcie {
+ 	reset-gpios = <&gpio GPIOA_8 GPIO_ACTIVE_LOW>;
+ };
+diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-khadas-vim3l.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-khadas-vim3l.dts
+index 0667b0ca6596..ef0a4c7bc7fd 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-khadas-vim3l.dts
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-khadas-vim3l.dts
+@@ -86,7 +86,7 @@ &cpu3 {
+ };
+ 
+ &pwm_AO_cd {
+-	pinctrl-0 = <&pwm_ao_d_e_pins>;
++	pinctrl-0 = <&pwm_ao_c_6_pins>, <&pwm_ao_d_e_pins>;
+ 	pinctrl-names = "default";
+ 	clocks = <&xtal>;
+ 	clock-names = "clkin1";

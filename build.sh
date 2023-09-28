@@ -6,6 +6,7 @@
 [[ -z $KERNEL_VERSION ]] && KERNEL_VERSION="6.5.5-200"
 [[ -z $FEDORA_REL ]] && FEDORA_REL="38"
 [[ -z $SPEC_FILE ]] && SPEC_FILE="kernel.spec"
+[[ -z $LOCAL_MOD ]] && LOCAL_MOD="kernel-local"
 
 echo "Building $KERNEL_VERSION.fc$FEDORA_REL kernel packages"
 
@@ -33,9 +34,13 @@ koji download-build --arch=src kernel-$KERNEL_VERSION.fc$FEDORA_REL.src.rpm
 echo "--- Unpacking source ---"
 rpm -i kernel-$KERNEL_VERSION.fc$FEDORA_REL.src.rpm
 
-# copy the kernel spec and the patches
+# copy the kernel spec
 cp $WDIR/$SPEC_FILE $HOME/rpmbuild/SPECS
 
+# copy the kernel-local file for additional kernel modules
+cp $WDIR/$LOCAL_MOD $HOME/rpmbuild/SOURCES
+
+# copy all the patches
 [[ -e $WDIR/patches/ ]] && echo "copying patches" && cp $WDIR/patches/* $HOME/rpmbuild/SOURCES
 
 # prepare the build in case you wish to add modifications.
