@@ -12,7 +12,7 @@ index 4291798bd..bb3d4fb67 100644
  static int dw_mipi_dsi_debugfs_write(void *data, u64 val)
  {
 diff --git a/drivers/gpu/drm/meson/meson_vclk.c b/drivers/gpu/drm/meson/meson_vclk.c
-index 2a82119eb..a5f78aae0 100644
+index 2a82119eb..a28615029 100644
 --- a/drivers/gpu/drm/meson/meson_vclk.c
 +++ b/drivers/gpu/drm/meson/meson_vclk.c
 @@ -55,6 +55,8 @@
@@ -91,6 +91,13 @@ index 2a82119eb..a5f78aae0 100644
  
  	hdmi_tx_div = vclk_freq / dac_freq;
  
+@@ -1107,5 +1153,6 @@ void meson_vclk_setup(struct meson_drm *priv, unsigned int target,
+ 		       params[freq].pll_od3, params[freq].vid_pll_div,
+ 		       params[freq].vclk_div, hdmi_tx_div, venc_div,
+ 		       hdmi_use_enci, vic_alternate_clock);
++	}
+ }
+ EXPORT_SYMBOL_GPL(meson_vclk_setup);
 diff --git a/drivers/gpu/drm/meson/meson_vclk.h b/drivers/gpu/drm/meson/meson_vclk.h
 index 60617aaf1..1152b3af8 100644
 --- a/drivers/gpu/drm/meson/meson_vclk.h
